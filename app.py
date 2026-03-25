@@ -173,8 +173,8 @@ with st.expander("💡 사용 방법"):
     st.write("""
     1. 스캔된 PDF 원본 파일들을 아래 영역에 마우스로 끌어다 놓습니다.
     2. **[작업 실행]** 버튼을 클릭합니다.
-    3. 처리가 완료되면 화면 중앙에서 **추출된 데이터를 미리 확인**할 수 있습니다.
-    4. 좌측 **사이드바**에서 **[다운로드]** 버튼을 눌러 압축(ZIP) 파일을 받습니다.
+    3. 처리가 완료되면 화면 중앙에서 **핵심 데이터**를 미리 확인할 수 있습니다.
+    4. 좌측 **사이드바**에서 **[다운로드]** 버튼을 눌러 압축(ZIP) 파일을 받습니다. (엑셀에는 모든 항목이 포함됩니다)
     """)
 
 uploaded_files = st.file_uploader(
@@ -319,9 +319,14 @@ if uploaded_files and not st.session_state.is_processed:
 # --- 메인 화면 데이터 미리보기 표 ---
 if st.session_state.is_processed:
     if st.session_state.preview_data:
-        st.subheader("🔎 미리보기")
+        st.subheader("🔎 핵심 데이터 미리보기")
         df = pd.DataFrame(st.session_state.preview_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # ⭐️ 엑셀 다운로드는 전체 데이터를 유지하되, 화면에는 지정된 4개 컬럼만 출력합니다.
+        preview_cols = ['결제일', '가맹점명', '총액', '원본 파일명']
+        preview_df = df[preview_cols]
+        
+        st.dataframe(preview_df, use_container_width=True, hide_index=True)
     else:
         st.info("정상적으로 추출된 데이터가 없습니다. (모두 검토 요망으로 분류됨)")
 

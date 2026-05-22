@@ -345,7 +345,7 @@ if st.session_state.is_processed:
         st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
         
         # 📅 오늘 날짜를 YYMMDD 형식 문자열로 추출 (예: 오늘이 2026년 5월 22일이면 "260522")
-        today_str = datetime.today().strftime('%y%m%dd')
+        today_str = datetime.today().strftime('%y%m%d')
         
         st.download_button(
             label="📦 다운로드 (ZIP)",

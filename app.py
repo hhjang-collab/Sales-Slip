@@ -344,10 +344,13 @@ if st.session_state.is_processed:
         # [공통 규칙 7] 여백이 얇은 구분선 활용 (st.divider 교체)
         st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
         
+        # 📅 오늘 날짜를 YYMMDD 형식 문자열로 추출 (예: 오늘이 2026년 5월 22일이면 "260522")
+        today_str = datetime.today().strftime('%y%m%dd')
+        
         st.download_button(
             label="📦 다운로드 (ZIP)",
             data=st.session_state.zip_data,
-            file_name="매출전표_완료_{today_str}.zip",
+            file_name=f"매출전표_완료_{today_str}.zip",  # ⭐️ 날짜가 조합된 파일명으로 동적 설정
             mime="application/zip",
             type="primary",
             use_container_width=True

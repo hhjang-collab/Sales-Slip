@@ -6,6 +6,7 @@ import pdfplumber
 import uuid
 import pandas as pd
 import base64  # ⭐️ 이미지 변환을 위해 추가됨
+from datetime import datetime  # 📅 오늘 날짜 추출을 위해 추가됨
 from pypdf import PdfReader, PdfWriter
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment
@@ -346,7 +347,7 @@ if st.session_state.is_processed:
         st.download_button(
             label="📦 다운로드 (ZIP)",
             data=st.session_state.zip_data,
-            file_name="매출전표_완료.zip",
+            file_name="매출전표_완료_{today_str}.zip",
             mime="application/zip",
             type="primary",
             use_container_width=True

@@ -136,6 +136,7 @@ def reset_app():
 # --- 데이터 추출 로직 함수 ---
 def extract_receipt_info(text_layout, text_normal):
     date_str, time_str, store_name, supply_val, vat_val, card_str, total_amount = ("", "", "", "", "", "", "")
+    is_canceled = False  # ⭐️ 취소 여부를 판단할 변수 추가
 
     card_match = re.search(r'\*{4}\s*-\s*(\d{4})', text_normal)
     if card_match:
@@ -147,6 +148,11 @@ def extract_receipt_info(text_layout, text_normal):
     layout_supply = re.search(r'공급가액\s*\|?\s*([\d,\.]+)', text_layout)
     layout_vat = re.search(r'부가세\s*\|?\s*([\d,\.]+)', text_layout)
     layout_total = re.search(r'총액\s*\|?\s*([\d,\.]+)', text_layout)
+    
+    # ⭐️ 결제방법 항목을 찾아 취소 여부 확인
+    layout_payment = re.search(r'결제방법\s*\|?\s*(.+)', text_layout)
+    if layout_payment and "취소" in layout_payment.group(1):
+        is_canceled = True
 
     if layout_date and layout_store and layout_total:
         date_str = f"{layout_date.group(1)}-{layout_date.group(2)}-{layout_date.group(3)}"
@@ -165,7 +171,12 @@ def extract_receipt_info(text_layout, text_normal):
             total_amount = fallback.group(8).strip()
             store_name = re.sub(r'[\\/*?:"<>|]', "", fallback.group(9).strip())
             
-    return date_str, time_str, store_name, supply_val, vat_val, card_str, total_amount
+            # ⭐️ fallback 시에도 결제방법에 취소가 포함되어 있는지 확인
+            if re.search(r'결제방법.*?취소', text_normal):
+                is_canceled = True
+            
+    # ⭐️ is_canceled 반환값 추가
+    return date_str, time_str, store_name, supply_val, vat_val, card_str, total_amount, is_canceled
 
 # --- 메인 화면 ---
 st.title("🧾 매출전표 정리 자동화")
@@ -239,7 +250,8 @@ if uploaded_files and not st.session_state.is_processed:
                         text_layout = page.extract_text(layout=True) or ""
                         text_normal = page.extract_text() or ""
                         
-                        date_str, time_str, store_name, supply_val, vat_val, card_str, total_amount = extract_receipt_info(text_layout, text_normal)
+                        # ⭐️ is_canceled 반환값 받기
+                        date_str, time_str, store_name, supply_val, vat_val, card_str, total_amount, is_canceled = extract_receipt_info(text_layout, text_normal)
 
                         writer = PdfWriter()
                         writer.add_page(reader.pages[i])
@@ -250,6 +262,10 @@ if uploaded_files and not st.session_state.is_processed:
                             y, m, d = date_str.split("-")
                             year_short = y[2:]
                             base_filename = f"{year_short}.{m}.{d}_{store_name}_{total_amount}"
+                            
+                            # ⭐️ 결제취소 건일 경우 파일명에 (취소) 덧붙이기
+                            if is_canceled:
+                                base_filename += "(취소)"
                             
                             new_filename_with_ext = f"{base_filename}.pdf"
                             counter = 1
@@ -281,6 +297,7 @@ if uploaded_files and not st.session_state.is_processed:
                                 "공급가액": num_supply,
                                 "부가세액": num_vat,
                                 "총액": total_amount,
+                                "비고": "취소" if is_canceled else "", # ⭐️ 미리보기 표에서도 쉽게 확인할 수 있도록 비고 추가 (선택사항)
                                 "카드번호": f"*{num_card}" if num_card else "",
                                 "원본 파일명": f"{uploaded_file.name} ({i+1}p)"
                             })
@@ -323,8 +340,8 @@ if st.session_state.is_processed:
         st.subheader("🔎 미리보기")
         df = pd.DataFrame(st.session_state.preview_data)
         
-        # ⭐️ 엑셀 다운로드는 전체 데이터를 유지하되, 화면에는 지정된 4개 컬럼만 출력합니다.
-        preview_cols = ['결제일', '가맹점명', '총액', '원본 파일명']
+        # ⭐️ 엑셀 다운로드는 전체 데이터를 유지하되, 화면에는 지정된 4개 컬럼만 출력합니다. (비고 추가됨)
+        preview_cols = ['결제일', '가맹점명', '총액', '비고', '원본 파일명']
         preview_df = df[preview_cols]
         
         st.dataframe(preview_df, use_container_width=True, hide_index=True)

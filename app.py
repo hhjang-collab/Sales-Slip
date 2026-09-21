@@ -143,10 +143,10 @@ def extract_receipt_info(text_layout, text_normal):
 
     layout_date = re.search(r'(\d{4})년\s*(\d{2})월\s*(\d{2})일', text_layout)
     layout_time = re.search(r'(\d{2})시\s*(\d{2})분', text_layout)
-    layout_store = re.search(r'가맹점명\s+(.+)', text_layout)
-    layout_supply = re.search(r'공급가액\s+([\d,\.]+)', text_layout)
-    layout_vat = re.search(r'부가세\s+([\d,\.]+)', text_layout)
-    layout_total = re.search(r'총액\s+([\d,\.]+)', text_layout)
+    layout_store = re.search(r'가맹점명\s*\|?\s*(.+)', text_layout)
+    layout_supply = re.search(r'공급가액\s*\|?\s*([\d,\.]+)', text_layout)
+    layout_vat = re.search(r'부가세\s*\|?\s*([\d,\.]+)', text_layout)
+    layout_total = re.search(r'총액\s*\|?\s*([\d,\.]+)', text_layout)
 
     if layout_date and layout_store and layout_total:
         date_str = f"{layout_date.group(1)}-{layout_date.group(2)}-{layout_date.group(3)}"
